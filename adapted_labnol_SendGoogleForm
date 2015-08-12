@@ -1,0 +1,62 @@
+/*  This is adapted from the solution from:
+      http://www.labnol.org/internet/google-docs-email-form/20884/
+    The only thing that's been changed is in the SendGoogleForm(e) for loop
+*/
+
+/**
+* @OnlyCurrentDoc
+*/
+ 
+function Initialize() {
+ 
+    var triggers = ScriptApp.getProjectTriggers();
+ 
+    for (var i in triggers)
+        ScriptApp.deleteTrigger(triggers[i]);
+ 
+    ScriptApp.newTrigger("SendGoogleForm")
+        .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+        .onFormSubmit().create();
+}
+ 
+function SendGoogleForm(e) {
+ 
+    if (MailApp.getRemainingDailyQuota() < 1) return;
+ 
+    // You may replace this with another email address
+    var email = "hello@ctrlq.org";
+ 
+    // Enter your subject for Google Form email notifications
+    var subject = "Google Form Submitted";
+ 
+    var s = SpreadsheetApp.getActiveSheet();
+    var columns = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0];
+    var message = "";
+ 
+    // Only include form fields that are not blank
+    for (var keys in columns) {
+        var key = columns[keys];
+        if (e.namedValues[key] && (e.namedValues[key] !== "")) {
+        
+          //checks to see if the field value is not a number, and if not it adds that field to the email
+          if (isNaN(e.namedValues[key])) {
+            message += key + ' :: ' + e.namedValues[key] + "\n\n";
+          }
+          //if the field value is a number, checks to see if it's greater than 0 (can't order negative items)
+          // and if it is greater than 0, adds that field to the email
+          else {
+            if (e.namedValues[key] > 0) {
+              message += key + ' :: ' + e.namedValues[key] + "\n\n";
+            }
+          }
+            
+        }
+    }
+ 
+    MailApp.sendEmail(email, subject, message);
+}
+ 
+/* Original work/author information below: */
+/* Send Google Form Data by Email v3.0 */
+/* Source: http://labnol.org/?p=20884  */
+/* For support, contact the develop at www.ctrlq.org */
