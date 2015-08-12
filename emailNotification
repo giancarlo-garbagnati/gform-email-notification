@@ -1,0 +1,93 @@
+/*
+  This is the solution I came up with. I couldn't figure out how to get it to email upon form submission so I found:
+    http://www.labnol.org/internet/google-docs-email-form/20884/
+  And took the Initialize function from that (although I didn't realize until a lot later that this had to be in the
+  script for the spreadsheet, not the form itself, and that perhaps this Initialize function isn't necessary if you
+  can add the trigger by hand by Resources -> Current Project Triggers)
+*/
+
+function Initialize() {
+ 
+  var triggers = ScriptApp.getProjectTriggers();
+ 
+  for (var i in triggers)
+    ScriptApp.deleteTrigger(triggers[i]);
+ 
+  
+  ScriptApp.newTrigger("emailNotification")
+     .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+     .onFormSubmit().create();
+  
+  
+  /*
+  ScriptApp.newTrigger("emailNotification")
+     .forSpreadsheet("1M6uIhdvI8RgqZzuzlGOzvEea3ccTkN38yroLle7exuE")
+     .onFormSubmit().create();
+  */
+  
+}
+
+
+function emailNotification() {
+  
+  var spsheet = SpreadsheetApp.getActiveSheet();
+  
+  // Change this to your email address:
+  var emailAddress = "person@email.com";
+  
+  var currentRow = spsheet.getLastRow();
+  var lastColumn = spsheet.getLastColumn();
+  
+  var headers = spsheet.getSheetValues(1,1,1,lastColumn);
+  // remember! getSheetValues returns a 2d array of Objects
+  // 2d is [row][col]
+  var currentRowVals = spsheet.getSheetValues(currentRow,1,1,lastColumn);
+  
+  // iterates through the values to calculate the number of values with 0 or missing values - 
+  //                                              although now realizing this is not needed
+  /*
+  var valuesWithNumbers = 0;
+  for (i = 1; i < currentRowVals[0].length; i++) {
+    if (currentRowVals[0][i] > 0 || currentRowVals[0][i] < 0) {
+      valuesWithNumbers++;
+    }
+  }
+  */
+  
+  //we'll try creating two arrays for headers and data and add only if value != 0
+  var headersWithValues = [];
+  var emailHeader = "" + spsheet.getName() + " Updated";
+  var emailBody = "" + headers[0][0] + ": " + currentRowVals[0][0] + "\n";
+  for (i = 1; i < currentRowVals[0].length; i++) {
+    // isNaN(x) checks to see if x is a not number, returns true if it is not a number
+    if (!isNaN(currentRowVals[0][i])) {
+      if (currentRowVals[0][i] > 0 || currentRowVals[0][i] < 0) {
+        emailBody = emailBody + "\n" + headers[0][i] + ": " + currentRowVals[0][i];
+      }
+    }
+  }
+  
+  MailApp.sendEmail(emailAddress, emailHeader, emailBody);
+  
+  
+  /* Random References
+  
+  Someone who already made something similar. Look at the initialize function to see if this will work.
+  http://www.labnol.org/internet/google-docs-email-form/20884/
+  
+  Google Script Class Pages
+  Forms-FormResponse
+  https://developers.google.com/apps-script/reference/forms/form-response
+  Forms-Form
+  https://developers.google.com/apps-script/reference/forms/form
+  Spreadsheets-Spreadsheet
+  https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet
+  
+  
+  Random R references (mostly array subsetting references)
+  http://science.nature.nps.gov/im/datamgmt/statistics/r/fundamentals/manipulation.cfm
+  http://stackoverflow.com/questions/2123968/r-array-manipulation
+  
+  */
+  
+}
